@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>成語選擇題小遊戲</title>
+  <style>
+    html, body {
+      font-family: sans-serif;
+      padding: 20px;
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    .question {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 1.2em;
+    }
+    .option {
+      margin: 3px;
+      flex: 1 1 45%;
+      display: inline-block;
+      transition: background-color 0.2s, transform 0.2s;
+      padding: 5px 10px;
+      font-size: 1.0em;
+    }
+    .option.selected {
+      background-color: #ffcc00;
+      transform: scale(1.0);
+      font-weight: bold;
+    }
+    .correct {
+      color: green;
+      margin-top: 5px;
+      font-size: 1.1em;
+    }
+    .wrong {
+      color: red;
+      margin-top: 5px;
+      font-size: 1.1em;
+    }
+    #scoreBoard {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .quiz-container {
+      display: flex;
+      gap: 40px;
+      height: calc(100vh - 50px);
+      overflow: hidden;
+    }
+    .column {
+      flex: 1;
+      overflow: hidden;
+    }
+    .question-block {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 10px;
+    }
+    .options-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .fixed-btns {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 10000;
+    }
+    .fixed-btns button {
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .fixed-btns button:hover {
+      background-color: #0056b3;
+    }
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid #007bff;
+      border-radius: 10px;
+      padding: 30px;
+      text-align: center;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+    .modal h2 {
+      margin: 0 0 10px;
+      color: #007bff;
+      font-size: 1.8em;
+    }
+    .modal p {
+      font-size: 1.2em;
+      margin: 0;
+    }
+	.modal-buttons button {
+	  padding: 12px 24px;
+	  font-size: 1em;
+	  border-radius: 10px;
+	  border: none;
+	  cursor: pointer;
+	  font-weight: bold;
+	  transition: background-color 0.3s, box-shadow 0.3s, transform 0.2s;
+	  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+	}
+
+	.modal-buttons button:hover {
+	  transform: scale(1.05);
+	  box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+	}
+  </style>
+</head>
+<body>
+  <div id="scoreBoard"></div>
+  <div class="quiz-container" id="quizContainer"></div>
+  <div class="fixed-btns">
+    <button onclick="restartQuiz()">重新測試</button>
+    <button onclick="showResult()">公布成績</button>
+	<button onclick="goHome()">返回首頁</button>
+  </div>
+  <div id="resultModal" class="modal">
+    <h2 id="resultText"></h2>
+    <p id="commentText"></p>
+  </div>
+  <div id="confirmRestartModal" class="modal">
+  <h2>重新測試</h2>
+  <p>已開始作答，是否要放棄已作答的題目？</p>
+  <div class="modal-buttons" style="margin-top: 20px;">
+    <button onclick="confirmRestart(true)" style="margin-right: 15px;">確定放棄</button>
+    <button onclick="confirmRestart(false)">繼續作答</button>
+  </div>
+</div>
+  <script>
+    const data = [
+      { sentence: "公司開除遲到的人，目的就是＿＿＿＿，要大家守時。", answer: "殺雞儆猴", options: ["殺雞儆猴", "畫蛇添足", "井底之蛙", "對牛彈琴"] },
+      { sentence: "他聽不進去大家的勸告，真是＿＿＿＿。", answer: "對牛彈琴", options: ["亡羊補牢", "對牛彈琴", "守株待兔", "掩耳盜鈴"] },
+      { sentence: "他自以為什麼都知道，其實是＿＿＿＿。", answer: "井底之蛙", options: ["鷸蚌相爭", "井底之蛙", "狐假虎威", "畫蛇添足"] },
+      { sentence: "他年輕時平凡無奇，後來卻＿＿＿＿。", answer: "大器晚成", options: ["大器晚成", "唉聲嘆氣", "虛有其表", "小題大作"] },
+      { sentence: "他說話總是＿＿＿＿，讓人搞不清楚重點。", answer: "拐彎抹角", options: ["拐彎抹角", "口是心非", "直截了當", "一針見血"] },
+      { sentence: "他名副其實，＿＿＿＿。", answer: "名實相符", options: ["名實相符", "名過其實", "徒有虛名", "自我膨脹"] },
+      { sentence: "趁機處理事情，正是＿＿＿＿的時候。", answer: "打鐵趁熱", options: ["打鐵趁熱", "事倍功半", "刻舟求劍", "指鹿為馬"] },
+      { sentence: "他趁混亂之際＿＿＿＿。", answer: "混水摸魚", options: ["混水摸魚", "明哲保身", "坐享其成", "唇亡齒寒"] },
+      { sentence: "大家一聽到開放消息，立刻＿＿＿＿。", answer: "爭先恐後", options: ["爭先恐後", "袖手旁觀", "按兵不動", "望而卻步"] },
+      { sentence: "這次的意外，引發＿＿＿＿。", answer: "連鎖反應", options: ["連鎖反應", "不了了之", "見仁見智", "大驚小怪"] },
+      { sentence: "他竟然走到那裡，簡直像是＿＿＿＿。", answer: "鬼使神差", options: ["鬼使神差", "走火入魔", "半信半疑", "無中生有"] },
+      { sentence: "終於有機會＿＿＿＿，讓他很興奮。", answer: "大展身手", options: ["大展身手", "得過且過", "心灰意冷", "孤掌難鳴"] },
+      { sentence: "他善於＿＿＿＿，觀察氣氛再開口。", answer: "察言觀色", options: ["察言觀色", "口無遮攔", "隨波逐流", "裝聾作啞"] },
+      { sentence: "因為怕牽連其他人，他只好＿＿＿＿。", answer: "投鼠忌器", options: ["投鼠忌器", "落井下石", "隔岸觀火", "趁火打劫"] },
+      { sentence: "他喜歡在背後＿＿＿＿，挑撥是非。", answer: "搬弄是非", options: ["搬弄是非", "光明磊落", "義正辭嚴", "不偏不倚"] },
+      { sentence: "他一直覺得有人針對他，就像＿＿＿＿。", answer: "盲刺在背", options: ["盲刺在背", "背水一戰", "莫名其妙", "走馬看花"] },
+      { sentence: "他早有預謀，＿＿＿＿地安排一切。", answer: "處心積慮", options: ["處心積慮", "隨遇而安", "畫蛇添足", "心血來潮"] },
+      { sentence: "他為了國家，表現出＿＿＿＿。", answer: "赤膽忠心", options: ["赤膽忠心", "勾心鬥角", "明哲保身", "袖手旁觀"] }
+    ];
+    let quizList = [];
+    let answers = [];
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createQuiz() {
+      const quizContainer = document.getElementById("quizContainer");
+      quizContainer.innerHTML = "";
+      const col1 = document.createElement("div");
+      const col2 = document.createElement("div");
+      col1.className = "column";
+      col2.className = "column";
+      quizList.forEach((q, index) => {
+        const block = document.createElement("div");
+        block.className = "question-block";
+
+        const sentence = document.createElement("div");
+        sentence.className = "question";
+        sentence.innerText = `(${index + 1}) ` + q.sentence;
+        block.appendChild(sentence);
+
+        const optionsGrid = document.createElement("div");
+        optionsGrid.className = "options-grid";
+
+        const options = shuffle([...q.options]);
+        options.forEach(option => {
+          const btn = document.createElement("button");
+          btn.innerText = option;
+          btn.className = "option";
+          btn.onclick = () => {
+            const buttons = block.querySelectorAll(".option");
+            buttons.forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+            answers[index] = option;
+          };
+          optionsGrid.appendChild(btn);
+        });
+
+        block.appendChild(optionsGrid);
+
+        if (index < 5) col1.appendChild(block);
+        else col2.appendChild(block);
+      });
+
+      quizContainer.appendChild(col1);
+      quizContainer.appendChild(col2);
+    }
+
+    function showResult() {
+      document.querySelectorAll('.question-block').forEach(block => {
+        const result = block.querySelector(".correct, .wrong");
+        if (result) result.remove();
+      });
+
+      let correct = 0;
+      quizList.forEach((q, i) => {
+        const block = document.querySelectorAll('.question-block')[i];
+        const isCorrect = answers[i] === q.answer;
+        const result = document.createElement("div");
+        result.innerHTML = isCorrect ? "<span class='correct'>✔ 答對了</span>" : `<span class='wrong'>✘ 答錯，正確答案：${q.answer}</span>`;
+        block.appendChild(result);
+        if (isCorrect) correct++;
+      });
+
+      const score = correct * 10;
+      const modal = document.getElementById("resultModal");
+      const resultText = document.getElementById("resultText");
+      const commentText = document.getElementById("commentText");
+
+      let comment = "";
+      if (score < 60) comment = "孩子~認真點好嗎?";
+      else if (score < 80) comment = "是不是電視看太多了?";
+      else if (score < 90) comment = "還不錯唷~不過還有努力空間~加油哦!!";
+      else if (score < 95) comment = "讚讚讚~越來越厲害囉!!";
+      else if (score === 95) comment = "厲害哦!!距離滿分只差一步哦~加油!!";
+      else comment = "太強了吧!!寶貝是最棒超棒的鴨~啾咪>0<";
+
+      resultText.innerText = `你的成績是 ${score} 分`;
+      commentText.innerText = comment;
+
+      modal.style.display = 'block';
+      setTimeout(() => { modal.style.display = 'none'; }, 3000);
+    }
+
+    function restartQuiz() {
+	  const hasAnswered = answers.some(ans => ans !== null);
+	  if (hasAnswered) {
+		document.getElementById("confirmRestartModal").style.display = 'block';
+	  } else {
+		doRestart();
+	  }
+	}
+	
+	function goHome() {
+	  window.location.href = "index.html"; // 請確認首頁檔案名稱是 index.html
+	}
+	
+	function confirmRestart(confirm) {
+	  document.getElementById("confirmRestartModal").style.display = 'none';
+	  if (confirm) {
+		doRestart();
+	  }
+	}
+
+	function doRestart() {
+	  quizList = shuffle([...data]).slice(0, 10);
+	  answers = Array(10).fill(null);
+	  document.getElementById("resultModal").style.display = 'none';
+	  createQuiz();
+	}
+
+
+
+    restartQuiz();
+  </script>
+</body>
+</html>
