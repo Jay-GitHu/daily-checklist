@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>每週任務清單</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      padding: 16px;
+      background: #f0f0f5;
+      margin: 0;
+    }
+	.back-button {
+	  display: inline-block;
+	  margin-bottom: 16px;
+	  padding: 10px 16px;
+	  background-color: #ccc;
+	  color: #333;
+	  text-decoration: none;
+	  border-radius: 8px;
+	  font-size: 0.95em;
+	}
+	.back-button:hover {
+	  background-color: #bbb;
+	}
+    h2 {
+      color: #333;
+      font-size: 1.2em;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 12px;
+    }
+    li {
+      padding: 10px 12px;
+      background: #fff;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .done {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+    label {
+      flex: 1;
+      margin-left: 10px;
+      font-size: 1em;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.2);
+    }
+	.task-input-group {
+	  display: flex;
+	  gap: 8px;
+	  margin-top: 10px;
+	}
+
+	.task-input-group input[type="text"] {
+	  flex: 1;
+	  padding: 10px;
+	  font-size: 1em;
+	  border: 1px solid #ccc;
+	  border-radius: 6px;
+	  background: #fff;
+	  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+	}
+
+	.task-input-group button {
+	  padding: 10px 16px;
+	  font-size: 1em;
+	  background-color: #4CAF50;
+	  color: white;
+	  border: none;
+	  border-radius: 6px;
+	  cursor: pointer;
+	  transition: background-color 0.2s;
+	}
+
+	.task-input-group button:hover {
+	  background-color: #45a049;
+	}
+  </style>
+</head>
+<body>
+<a href="index.html" class="back-button">⬅️ 返回首頁</a>
+
+<h2 id="date-title">任務清單</h2>
+<ul id="task-list"></ul>
+<hr>
+<h3>➕ 新增任務</h3>
+<div class="task-input-group">
+  <input type="text" id="new-task-input" placeholder="輸入任務...">
+  <button onclick="addNewTask()">新增</button>
+</div>
+
+<script>
+	const weeklyTasks = {
+		"Monday":    ["外套掛好、鞋子擺整理", "清理餐袋及清洗餐具", "整理書包(非上課用品)", "家長簽名", "準備小點心", "墨鏡放好"],
+		"Tuesday":   ["外套掛好、鞋子擺整理", "清理餐袋及清洗餐具", "整理書包(非上課用品)", "家長簽名", "準備小點心", "墨鏡放好"],
+		"Wednesday": ["外套掛好、鞋子擺整理", "整理書包(非上課用品)", "家長簽名", "準備小點心", "墨鏡放好"],
+		"Thursday":  ["外套掛好、鞋子擺整理", "清理餐袋及清洗餐具", "整理書包(非上課用品)", "家長簽名", "準備小點心", "墨鏡放好"],
+		"Friday":    ["外套掛好、鞋子擺整理", "整理書包(非上課用品)", "家長簽名", "墨鏡放好"],
+		"Saturday":  ["複習英文", "複習功課", "幫忙家事(洗地板含拖地)"],
+		"Sunday":    ["複習英文", "複習功課", "整理書包", "整理餐袋及餐具", "準備小點心", "準備口罩", "準備衣褲襪", "墨鏡放好"]
+	};
+
+	const today = new Date();
+	const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	const weekday = dayMap[today.getDay()];
+	const dateStr = today.toISOString().slice(0, 10);
+	const storageKey = "todo_" + dateStr;
+	const savedStatus = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+	document.getElementById("date-title").textContent = `📅 ${dateStr} (${weekday}) 任務清單`;
+
+	const taskList = document.getElementById("task-list");
+	const todayTasks = weeklyTasks[weekday] || ["無任務"];
+
+	todayTasks.forEach((task, index) => {
+		const li = document.createElement("li");
+		const id = "task_" + index;
+
+		const checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.id = id;
+		checkbox.checked = savedStatus[task] || false;
+
+		const label = document.createElement("label");
+		label.htmlFor = id;
+		label.textContent = task;
+
+		if (checkbox.checked) label.classList.add("done");
+
+		checkbox.addEventListener("change", () => {
+			savedStatus[task] = checkbox.checked;
+			localStorage.setItem(storageKey, JSON.stringify(savedStatus));
+			label.classList.toggle("done", checkbox.checked);
+		});
+
+		li.appendChild(checkbox);
+		li.appendChild(label);
+		taskList.appendChild(li);
+	});
+
+	function addNewTask() {
+		const input = document.getElementById("new-task-input");
+		const task = input.value.trim();
+		if (!task) return;
+
+		// 加入清單
+		const index = todayTasks.length; // 放在最後
+		todayTasks.push(task);
+
+		// 加到 localStorage 狀態
+		savedStatus[task] = false;
+		localStorage.setItem(storageKey, JSON.stringify(savedStatus));
+
+		// 渲染一個新的任務項目
+		const li = document.createElement("li");
+		const id = "task_" + index;
+
+		const checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.id = id;
+
+		const label = document.createElement("label");
+		label.htmlFor = id;
+		label.textContent = task;
+
+		checkbox.addEventListener("change", () => {
+			savedStatus[task] = checkbox.checked;
+			localStorage.setItem(storageKey, JSON.stringify(savedStatus));
+			label.classList.toggle("done", checkbox.checked);
+		});
+
+		li.appendChild(checkbox);
+		li.appendChild(label);
+		taskList.appendChild(li);
+
+		input.value = ""; // 清空輸入框
+	}
+
+</script>
+
+</body>
+</html>
