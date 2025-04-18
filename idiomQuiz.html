@@ -167,21 +167,24 @@
         width: 100%;
         background-color: #f9f9f9;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
+        gap: 8px;
         padding: 6px 10px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         z-index: 1000;
       }
     
       .fixed-btns button {
-        padding: 4px 8px;
+        padding: 6px 10px;
         font-size: 0.85em;
         border-radius: 6px;
         white-space: nowrap;
+        flex: none; /* 防止撐滿容器高度 */
+        height: auto; /* 高度自動 */
       }
     
       .quiz-container {
-        margin-top: 50px; /* 預留空間避免題目被擋住 */
+        margin-top: 48px; /* 預留空間避免題目被擋住 */
       }
     }
 
