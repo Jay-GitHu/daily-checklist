@@ -87,7 +87,7 @@
       bottom: 20px;
       right: 20px;
       display: flex;
-      flex-direction: column;
+      display: row;
       gap: 10px;
       z-index: 1000;
     }
@@ -100,6 +100,7 @@
       border-radius: 8px;
       font-size: 1em;
       cursor: pointer;
+      white-space: nowrap; /* 確保文字不換行 */
     }
 
     .fixed-btns button:hover {
@@ -160,10 +161,10 @@
 
     @media (max-width: 767px) {
       .fixed-btns {
-        flex-direction: row;
-        bottom: 10px;
+        top: 10px;
         left: 50%;
         transform: translateX(-50%);
+        flex-direction: column;
       }
     }
   </style>
