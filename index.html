@@ -48,54 +48,98 @@
 
 <h2 id="date-title">任務清單</h2>
 <ul id="task-list"></ul>
+<hr>
+<h3>新增任務</h3>
+<input type="text" id="new-task-input" placeholder="輸入任務...">
+<button onclick="addNewTask()">新增</button>
 
 <script>
-  const weeklyTasks = {
-    "Monday": ["吃早餐", "檢查書包", "帶聯絡簿"],
-    "Tuesday": ["預習數學", "背2個成語", "幫忙倒垃圾"],
-    "Wednesday": ["背課文", "整理書桌", "閱讀10分鐘"],
-    "Thursday": ["預習自然", "複習社會", "擦黑板"],
-    "Friday": ["整理文具", "檢查功課", "準備明日服裝"],
-    "Saturday": ["複習成語", "閱讀30分鐘", "幫忙家事"],
-    "Sunday": ["寫週記", "預習下週功課", "準備書包"]
-  };
+	const weeklyTasks = {
+		"Monday": ["吃早餐", "檢查書包", "帶聯絡簿"],
+		"Tuesday": ["預習數學", "背2個成語", "幫忙倒垃圾"],
+		"Wednesday": ["背課文", "整理書桌", "閱讀10分鐘"],
+		"Thursday": ["預習自然", "複習社會", "擦黑板"],
+		"Friday": ["整理文具", "檢查功課", "準備明日服裝"],
+		"Saturday": ["複習成語", "閱讀30分鐘", "幫忙家事"],
+		"Sunday": ["寫週記", "預習下週功課", "準備書包"]
+	};
 
-  const today = new Date();
-  const weekday = today.toLocaleDateString('zh-TW', { weekday: 'long' });
-  const dateStr = today.toISOString().slice(0, 10);
-  const storageKey = "todo_" + dateStr;
-  const savedStatus = JSON.parse(localStorage.getItem(storageKey)) || {};
+	const today = new Date();
+	const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	const weekday = dayMap[today.getDay()];
+	const dateStr = today.toISOString().slice(0, 10);
+	const storageKey = "todo_" + dateStr;
+	const savedStatus = JSON.parse(localStorage.getItem(storageKey)) || {};
 
-  document.getElementById("date-title").textContent = `📅 ${dateStr} (${weekday}) 任務清單`;
+	document.getElementById("date-title").textContent = `📅 ${dateStr} (${weekday}) 任務清單`;
 
-  const taskList = document.getElementById("task-list");
-  const todayTasks = weeklyTasks[weekday] || ["無任務"];
+	const taskList = document.getElementById("task-list");
+	const todayTasks = weeklyTasks[weekday] || ["無任務"];
 
-  todayTasks.forEach((task, index) => {
-    const li = document.createElement("li");
-    const id = "task_" + index;
+	todayTasks.forEach((task, index) => {
+		const li = document.createElement("li");
+		const id = "task_" + index;
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.id = id;
-    checkbox.checked = savedStatus[task] || false;
+		const checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.id = id;
+		checkbox.checked = savedStatus[task] || false;
 
-    const label = document.createElement("label");
-    label.htmlFor = id;
-    label.textContent = task;
+		const label = document.createElement("label");
+		label.htmlFor = id;
+		label.textContent = task;
 
-    if (checkbox.checked) label.classList.add("done");
+		if (checkbox.checked) label.classList.add("done");
 
-    checkbox.addEventListener("change", () => {
-      savedStatus[task] = checkbox.checked;
-      localStorage.setItem(storageKey, JSON.stringify(savedStatus));
-      label.classList.toggle("done", checkbox.checked);
-    });
+		checkbox.addEventListener("change", () => {
+			savedStatus[task] = checkbox.checked;
+			localStorage.setItem(storageKey, JSON.stringify(savedStatus));
+			label.classList.toggle("done", checkbox.checked);
+		});
 
-    li.appendChild(checkbox);
-    li.appendChild(label);
-    taskList.appendChild(li);
-  });
+		li.appendChild(checkbox);
+		li.appendChild(label);
+		taskList.appendChild(li);
+	});
+
+	function addNewTask() {
+		const input = document.getElementById("new-task-input");
+		const task = input.value.trim();
+		if (!task) return;
+
+		// 加入清單
+		const index = todayTasks.length; // 放在最後
+		todayTasks.push(task);
+
+		// 加到 localStorage 狀態
+		savedStatus[task] = false;
+		localStorage.setItem(storageKey, JSON.stringify(savedStatus));
+
+		// 渲染一個新的任務項目
+		const li = document.createElement("li");
+		const id = "task_" + index;
+
+		const checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.id = id;
+
+		const label = document.createElement("label");
+		label.htmlFor = id;
+		label.textContent = task;
+
+		checkbox.addEventListener("change", () => {
+			savedStatus[task] = checkbox.checked;
+			localStorage.setItem(storageKey, JSON.stringify(savedStatus));
+			label.classList.toggle("done", checkbox.checked);
+		});
+
+		li.appendChild(checkbox);
+		li.appendChild(label);
+		taskList.appendChild(li);
+
+		input.value = ""; // 清空輸入框
+	}
+
 </script>
 
 </body>
