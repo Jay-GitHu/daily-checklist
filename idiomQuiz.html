@@ -161,12 +161,30 @@
 
     @media (max-width: 767px) {
       .fixed-btns {
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #f9f9f9;
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1000;
+      }
+    
+      .fixed-btns button {
+        padding: 4px 8px;
+        font-size: 0.85em;
+        border-radius: 6px;
+        white-space: nowrap;
+      }
+    
+      .quiz-container {
+        margin-top: 50px; /* 預留空間避免題目被擋住 */
       }
     }
+
   </style>
 </head>
 <body>
