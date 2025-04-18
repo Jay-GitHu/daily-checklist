@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>每週任務清單</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      padding: 16px;
+      background: #f0f0f5;
+      margin: 0;
+    }
+    h2 {
+      color: #333;
+      font-size: 1.2em;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 12px;
+    }
+    li {
+      padding: 10px 12px;
+      background: #fff;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .done {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+    label {
+      flex: 1;
+      margin-left: 10px;
+      font-size: 1em;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+
+<h2 id="date-title">任務清單</h2>
+<ul id="task-list"></ul>
+
+<script>
+  const weeklyTasks = {
+    "Monday": ["吃早餐", "檢查書包", "帶聯絡簿"],
+    "Tuesday": ["預習數學", "背2個成語", "幫忙倒垃圾"],
+    "Wednesday": ["背課文", "整理書桌", "閱讀10分鐘"],
+    "Thursday": ["預習自然", "複習社會", "擦黑板"],
+    "Friday": ["整理文具", "檢查功課", "準備明日服裝"],
+    "Saturday": ["複習成語", "閱讀30分鐘", "幫忙家事"],
+    "Sunday": ["寫週記", "預習下週功課", "準備書包"]
+  };
+
+  const today = new Date();
+  const weekday = today.toLocaleDateString('zh-TW', { weekday: 'long' });
+  const dateStr = today.toISOString().slice(0, 10);
+  const storageKey = "todo_" + dateStr;
+  const savedStatus = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+  document.getElementById("date-title").textContent = `📅 ${dateStr} (${weekday}) 任務清單`;
+
+  const taskList = document.getElementById("task-list");
+  const todayTasks = weeklyTasks[weekday] || ["無任務"];
+
+  todayTasks.forEach((task, index) => {
+    const li = document.createElement("li");
+    const id = "task_" + index;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = id;
+    checkbox.checked = savedStatus[task] || false;
+
+    const label = document.createElement("label");
+    label.htmlFor = id;
+    label.textContent = task;
+
+    if (checkbox.checked) label.classList.add("done");
+
+    checkbox.addEventListener("change", () => {
+      savedStatus[task] = checkbox.checked;
+      localStorage.setItem(storageKey, JSON.stringify(savedStatus));
+      label.classList.toggle("done", checkbox.checked);
+    });
+
+    li.appendChild(checkbox);
+    li.appendChild(label);
+    taskList.appendChild(li);
+  });
+</script>
+
+</body>
+</html>
